@@ -43,24 +43,14 @@ const makeDomo = (req, res) => {
   return domoPromise;
 };
 
-const makeDomoComment = (req, res) => {
-  if (!req.body.name || !req.body.comment) {
-    return res.status(400).json({ error: 'RAWR! Comment is required' });
-  }
-
-  Domo.DomoModel.findByName(req.body.name, (err, docs) => {
-    makeDomoComment2(req, res, docs[0]);
-  });
-}
-
-const makeDomoComment2 = (req, res, domo) =>{
+const makeDomoComment2 = (req, res, domo) => {
   let comments = domo.comments;
-  if(!domo.comments){
+  if (!domo.comments) {
     comments = [];
   }
   comments.push(req.body.comment);
 
-  const domoPromise = Domo.DomoModel.updateOne({name: domo.name}, {comments: comments});
+  const domoPromise = Domo.DomoModel.updateOne({ name: domo.name }, { comments });
 
   domoPromise.then(() => res.json({ redirect: '/maker' }));
 
@@ -75,6 +65,16 @@ const makeDomoComment2 = (req, res, domo) =>{
 
   return domoPromise;
 };
+
+const makeDomoComment = (req, res) => {
+  if (!req.body.name || !req.body.comment) {
+    return res.status(400).json({ error: 'RAWR! Comment is required' });
+  }
+
+  return Domo.DomoModel.findByName(req.body.name,
+    (err, docs) => makeDomoComment2(req, res, docs[0]));
+};
+
 
 const getDomos = (request, response) => {
   const req = request;

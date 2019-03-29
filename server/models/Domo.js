@@ -50,7 +50,7 @@ const DomoSchema = new mongoose.Schema({
 DomoSchema.statics.toAPI = (doc) => ({
   name: doc.name,
   age: doc.age,
-  level: doc.level
+  level: doc.level,
 });
 
 DomoSchema.statics.findByOwner = (ownerId, callback) => {
@@ -63,7 +63,7 @@ DomoSchema.statics.findByOwner = (ownerId, callback) => {
 
 DomoSchema.statics.findByName = (name, callback) => {
   const search = {
-    name: name,
+    name,
   };
 
   return DomoModel.find(search).select('name age level comments').exec(callback);
