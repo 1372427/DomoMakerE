@@ -1,5 +1,6 @@
 "use strict";
 
+var csrf = void 0;
 var handleDomo = function handleDomo(e) {
     e.preventDefault();
 
@@ -63,6 +64,20 @@ var DomoList = function DomoList(props) {
     }
 
     var domoNodes = props.domos.map(function (domo) {
+        var clickHandler = function clickHandler(e, name) {
+            e.preventDefault();
+
+            $("#domoMessage").animate({ width: 'hide' }, 350);
+
+            if ($("#comment").val() == '') {
+                handleError("RAWR! All fields are required");
+                return false;
+            }
+
+            sendAjax('POST', $("#domoComment" + domo.name).attr("action"), $("#domoComment" + domo.name).serialize(), function () {
+                loadDomosFromServer();
+            });
+        };
         return React.createElement(
             "div",
             { key: domo._id, className: "domo" },
@@ -84,6 +99,42 @@ var DomoList = function DomoList(props) {
                 { className: "domoLevel" },
                 "Level: ",
                 domo.level
+            ),
+            React.createElement(
+                "div",
+                { className: "domoCommentsContainer" },
+                React.createElement(
+                    "h3",
+                    { className: "domoComments" },
+                    "Comments:"
+                ),
+                React.createElement(
+                    "p",
+                    null,
+                    domo.comments.map(function (e) {
+                        return e + ",";
+                    })
+                )
+            ),
+            React.createElement(
+                "form",
+                { className: "commentForm", id: "domoComment" + domo.name,
+                    onSubmit: function onSubmit(e) {
+                        return clickHandler(e, domo.name);
+                    },
+                    name: "domoComment" + domo.name,
+                    action: "/maker2",
+                    method: "POST"
+                },
+                React.createElement(
+                    "label",
+                    { htmlFor: "comment" + domo.name },
+                    "Comment: "
+                ),
+                React.createElement("input", { id: "comment" + domo.name, type: "text", name: "comment", placeholder: "Domo Comment" }),
+                React.createElement("input", { type: "hidden", name: "name", value: domo.name }),
+                React.createElement("input", { type: "hidden", name: "_csrf", value: props.csrf }),
+                React.createElement("input", { className: "makeDomoSubmit", type: "submit", value: "Comment" })
             )
         );
     });
@@ -96,27 +147,29 @@ var DomoList = function DomoList(props) {
 };
 
 var loadDomosFromServer = function loadDomosFromServer() {
+
     sendAjax('GET', '/getDomos', null, function (data) {
-        ReactDOM.render(React.createElement(DomoList, { domos: data.domos }), document.querySelector("#domos"));
+        ReactDOM.render(React.createElement(DomoList, { csrf: csrf, domos: data.domos }), document.querySelector("#domos"));
     });
 };
 
 var setup = function setup(csrf) {
     ReactDOM.render(React.createElement(DomoForm, { csrf: csrf }), document.querySelector("#makeDomo"));
 
-    ReactDOM.render(React.createElement(DomoList, { domos: [] }), document.querySelector("#domos"));
+    ReactDOM.render(React.createElement(DomoList, { csrf: csrf, domos: [] }), document.querySelector("#domos"));
 
     loadDomosFromServer();
 };
 
-var getToken = function getToken() {
-    sendAjax('GET', '/getToken', null, function (result) {
-        setup(result.csrfToken);
-    });
+var getToken = function getToken(callback) {
+    sendAjax('GET', '/getToken', null, callback);
 };
 
 $(document).ready(function () {
-    getToken();
+    getToken(function (result) {
+        csrf = result.csrfToken;
+        setup(result.csrfToken);
+    });
 });
 "use strict";
 
@@ -139,7 +192,7 @@ var sendAjax = function sendAjax(type, action, data, success) {
         dataType: "json",
         success: success,
         error: function error(xhr, status, _error) {
-            var messageObj = JSON.parse(chr.responseText);
+            var messageObj = JSON.parse(xhr.responseText);
             handleError(messageObj.error);
         }
     });

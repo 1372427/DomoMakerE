@@ -1,3 +1,4 @@
+let csrf;
 const handleDomo = (e) => {
     e.preventDefault();
 
@@ -46,12 +47,42 @@ const DomoList = function(props){
     }
 
     const domoNodes = props.domos.map(function(domo){
+        let clickHandler = (e, name) => {
+            e.preventDefault();
+
+            $("#domoMessage").animate({width: 'hide'}, 350);
+        
+            if($("#comment").val() == ''){
+                handleError("RAWR! All fields are required");
+                return false;
+            }
+        
+            sendAjax('POST', $(`#domoComment${domo.name}`).attr("action"), $(`#domoComment${domo.name}`).serialize(), function() {
+                loadDomosFromServer();
+            });
+        }
         return(
             <div key={domo._id} className="domo">
                 <img src="/assets/img/domoface.jpeg" alt="domo face" className="domoFace"/>
                 <h3 className="domoName">Name: {domo.name}</h3>
                 <h3 className="domoAge">Age: {domo.age}</h3>
                 <h3 className="domoLevel">Level: {domo.level}</h3>
+                <div className="domoCommentsContainer">
+                    <h3 className="domoComments">Comments:</h3>
+                    <p>{domo.comments.map(e=>`${e}, `)}</p>
+                </div>
+                <form className="commentForm" id={`domoComment${domo.name}`}
+                    onSubmit = {(e) => clickHandler(e, domo.name)}
+                    name={`domoComment${domo.name}`}
+                    action="/maker2"
+                    method="POST"
+                >
+                    <label htmlFor={`comment${domo.name}`}>Comment: </label>
+                    <input id={`comment${domo.name}`} type="text" name="comment" placeholder="Domo Comment"/>
+                    <input type="hidden" name="name" value={domo.name}/>
+                    <input type="hidden" name="_csrf" value={props.csrf}/>
+                    <input className="makeDomoSubmit" type="submit" value="Comment"/>
+                </form>
             </div>
         );
     });
@@ -64,10 +95,12 @@ const DomoList = function(props){
 };
 
 const loadDomosFromServer = () => {
+
     sendAjax('GET', '/getDomos', null, (data) => {
         ReactDOM.render(
-            <DomoList domos={data.domos} />, document.querySelector("#domos")
+            <DomoList csrf={csrf} domos={data.domos} />, document.querySelector("#domos")
         );
+        
     });
 };
 
@@ -77,18 +110,19 @@ const setup = function(csrf){
     );
 
     ReactDOM.render(
-        <DomoList domos={[]} />, document.querySelector("#domos")
+        <DomoList csrf={csrf} domos={[]} />, document.querySelector("#domos")
     );
 
     loadDomosFromServer();
 };
 
-const getToken = () => {
-    sendAjax('GET', '/getToken', null, (result) => {
-        setup(result.csrfToken);
-    });
+const getToken = (callback) => {
+    sendAjax('GET', '/getToken', null,callback);
 };
 
 $(document).ready(function(){
-    getToken();
+    getToken( (result) => {
+        csrf = result.csrfToken;
+        setup(result.csrfToken);
+    });
 });

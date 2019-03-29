@@ -60,7 +60,7 @@ nav:nth-child(1) {
 
 .domoForm label {
     display: inline-block;
-    width: 75px;
+    width: 60px;
     margin-left: 10px;
     font-size: 1.2em;
     float: left;
@@ -190,7 +190,7 @@ nav:nth-child(1) {
 }
 
 #domos {
-    width: 60%;
+    width: 50%;
     min-width: 400px;
     border: 2px solid #55acee;
     border-radius: 4px;
@@ -209,6 +209,7 @@ nav:nth-child(1) {
     padding: 10px;
     min-height:60px;
     overflow: hidden;
+    position: relative;
 }
 
 .domo:hover {
@@ -260,6 +261,20 @@ h3.domoLevel {
     padding-left: 40px;
     font-size: 1.5em;
 }
+
+.domoCommentsContainer {
+    display: block;
+    font-weight: bold;
+    padding-left: 40px;
+    font-size: 1.5em;
+}
+
+.commentForm {
+    position: absolute;
+    bottom: 0;
+    right: 30px;
+}
+
 
 .domo:first-child {
     margin-top: 10px;

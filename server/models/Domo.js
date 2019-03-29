@@ -15,6 +15,7 @@ const DomoSchema = new mongoose.Schema({
     required: true,
     trim: true,
     set: setName,
+    unique: true,
   },
 
   age: {
@@ -27,6 +28,11 @@ const DomoSchema = new mongoose.Schema({
     type: Number,
     min: 0,
     required: true,
+  },
+
+  comments: {
+    type: Array,
+    required: false,
   },
 
   owner: {
@@ -52,7 +58,15 @@ DomoSchema.statics.findByOwner = (ownerId, callback) => {
     owner: convertId(ownerId),
   };
 
-  return DomoModel.find(search).select('name age level').exec(callback);
+  return DomoModel.find(search).select('name age level comments').exec(callback);
+};
+
+DomoSchema.statics.findByName = (name, callback) => {
+  const search = {
+    name: name,
+  };
+
+  return DomoModel.find(search).select('name age level comments').exec(callback);
 };
 
 DomoModel = mongoose.model('Domo', DomoSchema);
